@@ -40,15 +40,15 @@ class handler(BaseHTTPRequestHandler):
                 'socket_timeout': 20,
                 # Better user agent to avoid bot detection
                 'user_agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
-                # YouTube specific options - aggressive bypass strategy
+                # YouTube specific options - use tv_embedded for best compatibility
                 'extractor_args': {
                     'youtube': {
-                        # Try multiple clients in order - android works best for bot detection
-                        'player_client': ['android', 'tv_embedded', 'ios'],
+                        # tv_embedded and mweb clients work best for bypassing restrictions
+                        'player_client': ['tv_embedded', 'mweb', 'android'],
                         # Skip webpage and configs to use API directly
-                        'player_skip': ['webpage', 'configs'],
+                        'player_skip': ['webpage'],
                         # Skip formats that might trigger additional checks
-                        'skip': ['dash', 'hls', 'translated_subs'],
+                        'skip': ['dash', 'hls'],
                     }
                 },
                 # Additional headers to mimic Android app
