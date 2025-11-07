@@ -30,30 +30,39 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(500, 'yt-dlp not available')
                 return
 
-            # Configure yt-dlp options with better bot detection handling
+            # Configure yt-dlp options with advanced YouTube bypass
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
                 'extract_flat': False,
                 'skip_download': True,
                 # Limit processing time
-                'socket_timeout': 15,
+                'socket_timeout': 20,
                 # Better user agent to avoid bot detection
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                # YouTube specific options - use mobile client to bypass restrictions
+                'user_agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+                # YouTube specific options - aggressive bypass strategy
                 'extractor_args': {
                     'youtube': {
-                        'player_client': ['android', 'ios', 'mweb'],
-                        'skip': ['dash', 'hls'],
+                        # Try multiple clients in order - android works best for bot detection
+                        'player_client': ['android', 'tv_embedded', 'ios'],
+                        # Skip webpage and configs to use API directly
+                        'player_skip': ['webpage', 'configs'],
+                        # Skip formats that might trigger additional checks
+                        'skip': ['dash', 'hls', 'translated_subs'],
                     }
                 },
-                # Additional headers to mimic browser
+                # Additional headers to mimic Android app
                 'http_headers': {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
+                    'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'X-YouTube-Client-Name': '3',
+                    'X-YouTube-Client-Version': '19.09.37',
                 },
                 'no_check_certificate': True,
+                # Force IPv4 to avoid some regional blocks
+                'source_address': '0.0.0.0',
             }
 
             # Extract video information
