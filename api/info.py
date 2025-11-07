@@ -13,37 +13,14 @@ except ImportError:
     yt_dlp = None
 
 class handler(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
-
     def do_GET(self):
-        self.handle_request()
-
-    def do_POST(self):
-        self.handle_request()
-
-    def handle_request(self):
         try:
-            video_url = None
+            # Parse URL and query parameters
+            parsed_path = urlparse(self.path)
+            query_params = parse_qs(parsed_path.query)
 
-            # Handle GET request
-            if self.command == 'GET':
-                parsed_path = urlparse(self.path)
-                query_params = parse_qs(parsed_path.query)
-                video_url = query_params.get('url', [None])[0]
-
-            # Handle POST request
-            elif self.command == 'POST':
-                content_length = int(self.headers.get('Content-Length', 0))
-                if content_length > 0:
-                    body = self.rfile.read(content_length)
-                    data = json.loads(body.decode('utf-8'))
-                    video_url = data.get('url')
-                    # cookies_data = data.get('cookies')  # TODO: Implement cookies
+            # Get the video URL from query parameters
+            video_url = query_params.get('url', [None])[0]
 
             if not video_url:
                 self.send_error_response(400, 'Missing url parameter')
