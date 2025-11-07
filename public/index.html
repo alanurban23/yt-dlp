@@ -344,35 +344,39 @@
                 <label for="useCookies">🔓 Use YouTube Cookies (for restricted videos)</label>
             </div>
             <div class="cookies-input" id="cookiesInput">
-                <button onclick="loginToYouTube()" class="login-btn" id="loginBtn">
-                    🔐 Login to YouTube & Auto-Import Cookies
-                </button>
+                <!-- Desktop Instructions -->
+                <div id="desktopInstructions" style="display: none;">
+                    <button onclick="toggleInstructions()" class="login-btn" id="loginBtn">
+                        📖 Show Cookie Import Guide
+                    </button>
 
-                <div class="instructions-box" id="instructionsBox">
-                    <strong>📋 Quick Cookie Export Instructions:</strong>
-                    <ol>
-                        <li>A new window with YouTube will open</li>
-                        <li>Log in to your YouTube account</li>
-                        <li>Press <kbd>F12</kbd> to open Developer Tools</li>
-                        <li>Go to <strong>Console</strong> tab</li>
-                        <li>Paste this command and press Enter:</li>
-                    </ol>
-                    <textarea id="cookieScript" readonly style="width: 100%; height: 80px; font-family: monospace; font-size: 11px; margin: 10px 0; padding: 8px;">copy(document.cookie.split('; ').map(c => { const [name, value] = c.split('='); return `.youtube.com\tTRUE\t/\tFALSE\t0\t${name}\t${value}`; }).join('\n'));</textarea>
-                    <button onclick="copyScript()" class="copy-btn">📋 Copy Script</button>
-                    <p style="margin-top: 10px; font-size: 0.9em;">After running the script, cookies will be copied to clipboard. Come back here and paste them in the textarea below.</p>
+                    <div class="instructions-box" id="instructionsBox">
+                        <strong>📋 Quick Cookie Export (Desktop Only):</strong>
+                        <ol>
+                            <li>Install extension: <a href="https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank">Get cookies.txt LOCALLY</a></li>
+                            <li>Go to <a href="https://youtube.com" target="_blank">YouTube.com</a> and log in</li>
+                            <li>Click the extension icon</li>
+                            <li>Click "Export" → Copy cookies</li>
+                            <li>Paste below</li>
+                        </ol>
+                        <p style="margin-top: 10px; font-size: 0.9em; color: #666;">This extension works offline and keeps your cookies private.</p>
+                    </div>
                 </div>
 
-                <div class="help-text" style="margin-top: 10px; margin-bottom: 10px;">
-                    Click above to get step-by-step instructions for importing cookies.
+                <!-- Mobile Instructions -->
+                <div id="mobileInstructions" style="display: none;">
+                    <div class="instructions-box show" style="background: #fff3cd; border-left-color: #ffc107;">
+                        <strong>📱 Mobile Users:</strong>
+                        <p style="margin: 10px 0;">Cookie import is not supported on mobile devices. Please use a desktop computer to access age-restricted videos.</p>
+                        <p style="margin: 10px 0; font-size: 0.9em;">✅ Most public YouTube videos work without cookies!</p>
+                    </div>
                 </div>
+
                 <textarea
                     id="cookiesData"
-                    placeholder="Or paste your YouTube cookies here manually (Netscape format)...&#10;Example:&#10;# Netscape HTTP Cookie File&#10;.youtube.com    TRUE    /    TRUE    0    CONSENT    YES+&#10;.youtube.com    TRUE    /    FALSE   0    VISITOR_INFO1_LIVE    xxxxx"
+                    placeholder="Paste YouTube cookies here (Netscape format)...&#10;&#10;Tip: Most videos work WITHOUT cookies!"
+                    style="margin-top: 15px;"
                 ></textarea>
-                <div class="help-text">
-                    💡 Alternative: Use browser extensions like "Get cookies.txt LOCALLY" to export YouTube cookies.
-                    <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank">Learn more</a>
-                </div>
             </div>
         </div>
 
@@ -389,19 +393,38 @@
         </div>
 
         <div class="note">
-            <strong>✅ YouTube Working!</strong> Most YouTube videos now work using advanced Android client emulation.
+            <strong>✅ YouTube Working!</strong> Most public YouTube videos work perfectly without any login.
             <br><br>
-            <strong>🔓 Cookies Support:</strong> For age-restricted or sign-in required videos, enable the cookies option above and paste your YouTube cookies exported from your browser.
+            <strong>📱 Mobile-Friendly:</strong> This app works great on phones! Just paste a video URL and click "Get Info".
+            <br><br>
+            <strong>🔓 Advanced:</strong> For age-restricted videos, desktop users can import cookies (see checkbox above).
             <br><br>
             <strong>✅ Supported Platforms:</strong> YouTube, TikTok, Twitter/X, Instagram, Vimeo, Dailymotion, and 1000+ others
             <br><br>
-            <strong>Info:</strong> This demo runs on Vercel serverless functions and extracts video metadata.
-            Due to serverless limitations, actual downloading is not enabled.
+            <strong>Info:</strong> This demo extracts video metadata only. Downloading is not enabled.
         </div>
     </div>
 
     <script>
-        let youtubeWindow = null;
+        // Detect if user is on mobile
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Show appropriate instructions based on device
+        window.addEventListener('DOMContentLoaded', function() {
+            const mobile = isMobile();
+            const desktopInstructions = document.getElementById('desktopInstructions');
+            const mobileInstructions = document.getElementById('mobileInstructions');
+
+            if (mobile) {
+                mobileInstructions.style.display = 'block';
+                desktopInstructions.style.display = 'none';
+            } else {
+                mobileInstructions.style.display = 'none';
+                desktopInstructions.style.display = 'block';
+            }
+        });
 
         function toggleCookies() {
             const checkbox = document.getElementById('useCookies');
@@ -413,51 +436,13 @@
             }
         }
 
-        function loginToYouTube() {
+        function toggleInstructions() {
             const instructionsBox = document.getElementById('instructionsBox');
-
-            // Toggle instructions
             if (instructionsBox.classList.contains('show')) {
                 instructionsBox.classList.remove('show');
-                return;
+            } else {
+                instructionsBox.classList.add('show');
             }
-
-            // Show instructions
-            instructionsBox.classList.add('show');
-
-            // Open YouTube in new window
-            const width = 800;
-            const height = 600;
-            const left = (screen.width - width) / 2;
-            const top = (screen.height - height) / 2;
-
-            youtubeWindow = window.open(
-                'https://www.youtube.com',
-                'YouTubeLogin',
-                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-            );
-
-            // Focus the new window
-            if (youtubeWindow) {
-                youtubeWindow.focus();
-            }
-        }
-
-        function copyScript() {
-            const script = document.getElementById('cookieScript');
-            script.select();
-            document.execCommand('copy');
-
-            // Visual feedback
-            const btn = event.target;
-            const originalText = btn.textContent;
-            btn.textContent = '✅ Copied!';
-            btn.style.background = '#4CAF50';
-
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '';
-            }, 2000);
         }
 
         async function getVideoInfo() {
