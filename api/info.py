@@ -29,7 +29,6 @@ class handler(BaseHTTPRequestHandler):
     def handle_request(self):
         try:
             video_url = None
-            cookies_data = None
 
             # Handle GET request
             if self.command == 'GET':
@@ -44,7 +43,7 @@ class handler(BaseHTTPRequestHandler):
                     body = self.rfile.read(content_length)
                     data = json.loads(body.decode('utf-8'))
                     video_url = data.get('url')
-                    cookies_data = data.get('cookies')
+                    # cookies_data = data.get('cookies')  # TODO: Implement cookies
 
             if not video_url:
                 self.send_error_response(400, 'Missing url parameter')
@@ -73,22 +72,6 @@ class handler(BaseHTTPRequestHandler):
                 },
                 'no_check_certificate': True,
             }
-
-            # Add cookies if provided
-            cookie_file_path = None
-            if cookies_data:
-                import tempfile
-                # Create temporary cookie file
-                cookie_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
-                try:
-                    # Write cookies in Netscape format
-                    cookie_file.write(cookies_data)
-                    cookie_file.close()
-                    cookie_file_path = cookie_file.name
-                    ydl_opts['cookiefile'] = cookie_file_path
-                except Exception as e:
-                    # If cookie file creation fails, continue without cookies
-                    pass
 
             # Extract video information
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -127,13 +110,6 @@ class handler(BaseHTTPRequestHandler):
             self.send_error_response(400, f'Download error: {str(e)}')
         except Exception as e:
             self.send_error_response(500, f'Server error: {str(e)}')
-        finally:
-            # Cleanup temporary cookie file
-            if cookie_file_path:
-                try:
-                    os.unlink(cookie_file_path)
-                except:
-                    pass
 
     def send_success_response(self, data):
         self.send_response(200)
