@@ -36,33 +36,34 @@ class handler(BaseHTTPRequestHandler):
                 'no_warnings': True,
                 'extract_flat': False,
                 'skip_download': True,
-                # Limit processing time
-                'socket_timeout': 20,
+                # Extended timeout for better success rate
+                'socket_timeout': 30,
                 # Better user agent to avoid bot detection
-                'user_agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
-                # YouTube specific options - use tv_embedded for best compatibility
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                # YouTube specific options - maximize compatibility
                 'extractor_args': {
                     'youtube': {
-                        # tv_embedded and mweb clients work best for bypassing restrictions
-                        'player_client': ['tv_embedded', 'mweb', 'android'],
-                        # Skip webpage and configs to use API directly
-                        'player_skip': ['webpage'],
-                        # Skip formats that might trigger additional checks
-                        'skip': ['dash', 'hls'],
+                        # Use all available clients for maximum success rate
+                        'player_client': ['ios', 'android', 'tv_embedded', 'mweb', 'web'],
+                        # Skip checks that might fail
+                        'player_skip': ['configs'],
+                        # Skip formats that might trigger additional verification
+                        'skip': ['translated_subs'],
                     }
                 },
-                # Additional headers to mimic Android app
+                # Comprehensive headers
                 'http_headers': {
-                    'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
-                    'Accept': '*/*',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'en-US,en;q=0.9',
-                    'Accept-Encoding': 'gzip, deflate',
-                    'X-YouTube-Client-Name': '3',
-                    'X-YouTube-Client-Version': '19.09.37',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
                 },
                 'no_check_certificate': True,
-                # Force IPv4 to avoid some regional blocks
-                'source_address': '0.0.0.0',
+                # Bypass age restrictions
+                'age_limit': 18,
             }
 
             # Extract video information
