@@ -4,8 +4,7 @@ import json
 import urllib.request
 import os
 import tempfile
-import subprocess
-import base64
+import yt_dlp
 
 BROWSERLESS_TOKEN = os.environ.get('BROWSERLESS_TOKEN', 'demo-token')
 
@@ -101,64 +100,63 @@ class handler(BaseHTTPRequestHandler):
         """Download video using yt-dlp with cookies"""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Save cookies to temp file
-            cookies_file = os.path.join(tmpdir, 'cookies.txt')
+            cookies_file = None
             if cookies_content:
+                cookies_file = os.path.join(tmpdir, 'cookies.txt')
                 with open(cookies_file, 'w') as f:
                     f.write(cookies_content)
 
             output_template = os.path.join(tmpdir, 'video.%(ext)s')
 
-            # yt-dlp command with cookies
-            cmd = [
-                'yt-dlp',
-                '--quiet',
-                '--no-warnings',
-                '-f', 'best[height<=720]',  # Limit to 720p for faster download
-                '--max-filesize', '100M',    # Limit file size
-                '--socket-timeout', '30',
-                '-o', output_template,
-            ]
-
-            if cookies_content:
-                cmd.extend(['--cookies', cookies_file])
-
-            # Add YouTube-specific options
-            cmd.extend([
-                '--extractor-args', 'youtube:player_client=android',
-                video_url
-            ])
-
-            # Execute download
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120
-            )
-
-            if result.returncode != 0:
-                raise Exception(f'yt-dlp error: {result.stderr}')
-
-            # Find downloaded file
-            files = [f for f in os.listdir(tmpdir) if f.startswith('video.')]
-            if not files:
-                raise Exception('No video file was downloaded')
-
-            video_file = os.path.join(tmpdir, files[0])
-
-            # Get file info
-            file_size = os.path.getsize(video_file)
-
-            # For demo purposes, return info instead of actual file
-            # In production, you'd upload to storage and return URL
-            return {
-                'status': 'success',
-                'message': 'Video downloaded successfully',
-                'filename': files[0],
-                'size': file_size,
-                'size_mb': round(file_size / 1024 / 1024, 2),
-                'note': 'Video downloaded server-side. In production, this would be uploaded to cloud storage.'
+            # yt-dlp options
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'format': 'best[height<=720]',  # Limit to 720p for faster download
+                'socket_timeout': 30,
+                'outtmpl': output_template,
+                'max_filesize': 100 * 1024 * 1024,  # 100MB limit
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android'],
+                        'player_skip': ['webpage', 'configs'],
+                    }
+                },
+                'no_check_certificate': True,
             }
+
+            if cookies_file:
+                ydl_opts['cookiefile'] = cookies_file
+
+            # Download using yt-dlp library
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(video_url, download=True)
+
+                    # Get the downloaded filename
+                    downloaded_file = ydl.prepare_filename(info)
+
+                    if not os.path.exists(downloaded_file):
+                        raise Exception('Video file not found after download')
+
+                    # Get file info
+                    file_size = os.path.getsize(downloaded_file)
+                    filename = os.path.basename(downloaded_file)
+
+                    # For demo purposes, return info instead of actual file
+                    # In production, you'd upload to storage and return URL
+                    return {
+                        'status': 'success',
+                        'message': 'Video downloaded successfully',
+                        'title': info.get('title', 'Unknown'),
+                        'filename': filename,
+                        'size': file_size,
+                        'size_mb': round(file_size / 1024 / 1024, 2),
+                        'duration': info.get('duration', 0),
+                        'note': 'Video downloaded server-side. In production, this would be uploaded to cloud storage.'
+                    }
+            except yt_dlp.utils.DownloadError as e:
+                raise Exception(f'Download error: {str(e)}')
 
     def do_OPTIONS(self):
         self.send_response(200)

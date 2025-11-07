@@ -5,3 +5,4 @@ pycryptodomex
 requests>=2.32.2
 urllib3>=1.26.17
 websockets>=13.0
+yt-dlp
