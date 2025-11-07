@@ -40,15 +40,15 @@ class handler(BaseHTTPRequestHandler):
                 'socket_timeout': 30,
                 # Better user agent to avoid bot detection
                 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                # YouTube specific options - maximize compatibility
+                # YouTube specific options - use android for best results
                 'extractor_args': {
                     'youtube': {
-                        # Use all available clients for maximum success rate
-                        'player_client': ['ios', 'android', 'tv_embedded', 'mweb', 'web'],
-                        # Skip checks that might fail
-                        'player_skip': ['configs'],
+                        # Android client works best for bypassing bot detection
+                        'player_client': ['android'],
+                        # Skip webpage to use API directly
+                        'player_skip': ['webpage'],
                         # Skip formats that might trigger additional verification
-                        'skip': ['translated_subs'],
+                        'skip': ['dash', 'hls'],
                     }
                 },
                 # Comprehensive headers
