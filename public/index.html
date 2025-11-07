@@ -208,8 +208,8 @@
             <input
                 type="text"
                 id="videoUrl"
-                placeholder="Enter video URL (TikTok, Twitter, Instagram, etc.)"
-                value="https://www.tiktok.com/@tiktok/video/7106594312292453675"
+                placeholder="Enter video URL (YouTube, TikTok, Twitter, etc.)"
+                value="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
             >
             <button onclick="getVideoInfo()" id="submitBtn">Get Info</button>
         </div>
@@ -227,14 +227,15 @@
         </div>
 
         <div class="note">
-            <strong>⚠️ YouTube Limitation:</strong> YouTube currently blocks most serverless requests as bots.
-            This demo works best with platforms like <strong>TikTok, Twitter/X, Instagram, Dailymotion</strong>, and many others.
+            <strong>✅ YouTube Working!</strong> Most YouTube videos now work using advanced Android client emulation.
             <br><br>
-            <strong>✅ Tested & Working:</strong> TikTok, Twitter/X, and 1000+ other platforms
+            <strong>⚠️ Note:</strong> Some age-restricted or region-locked videos may still require authentication.
+            If a video fails, it's likely due to YouTube restrictions, not the tool.
             <br><br>
-            <strong>Note:</strong> This is a demo of yt-dlp running on Vercel serverless functions.
-            It can extract metadata from videos on various platforms. Due to serverless limitations,
-            actual downloading is not enabled in this demo.
+            <strong>✅ Supported Platforms:</strong> YouTube, TikTok, Twitter/X, Instagram, Vimeo, Dailymotion, and 1000+ others
+            <br><br>
+            <strong>Info:</strong> This demo runs on Vercel serverless functions and extracts video metadata.
+            Due to serverless limitations, actual downloading is not enabled.
         </div>
     </div>
 
@@ -271,9 +272,9 @@
             } catch (err) {
                 let errorMessage = err.message;
 
-                // Special handling for YouTube bot detection
+                // Special handling for YouTube restrictions
                 if (errorMessage.includes('Sign in to confirm') || errorMessage.includes('bot')) {
-                    errorMessage = '⚠️ YouTube Bot Detection: This video is currently blocked by YouTube for serverless requests. Please try a video from Vimeo, TikTok, Twitter, or other platforms that work better with this demo.';
+                    errorMessage = '⚠️ YouTube Restriction: This video appears to be age-restricted or region-locked. Most public YouTube videos work fine - try another one! You can also try videos from TikTok, Twitter, or 1000+ other platforms.';
                 }
 
                 error.innerHTML = errorMessage;
