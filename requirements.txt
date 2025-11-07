@@ -1,0 +1,7 @@
+brotli>=1.0.9
+certifi
+mutagen
+pycryptodomex
+requests>=2.32.2
+urllib3>=1.26.17
+websockets>=13.0
