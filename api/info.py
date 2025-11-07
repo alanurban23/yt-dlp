@@ -37,33 +37,17 @@ class handler(BaseHTTPRequestHandler):
                 'extract_flat': False,
                 'skip_download': True,
                 # Extended timeout for better success rate
-                'socket_timeout': 30,
-                # Better user agent to avoid bot detection
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'socket_timeout': 20,
                 # YouTube specific options - use android for best results
                 'extractor_args': {
                     'youtube': {
                         # Android client works best for bypassing bot detection
                         'player_client': ['android'],
-                        # Skip webpage to use API directly
-                        'player_skip': ['webpage'],
-                        # Skip formats that might trigger additional verification
-                        'skip': ['dash', 'hls'],
+                        # Skip webpage and configs to use API directly
+                        'player_skip': ['webpage', 'configs'],
                     }
                 },
-                # Comprehensive headers
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'DNT': '1',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1',
-                },
                 'no_check_certificate': True,
-                # Bypass age restrictions
-                'age_limit': 18,
             }
 
             # Extract video information
