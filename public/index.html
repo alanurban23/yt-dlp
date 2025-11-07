@@ -197,6 +197,74 @@
             color: #856404;
             font-size: 0.9em;
         }
+
+        .cookies-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .cookies-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .cookies-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .cookies-toggle label {
+            cursor: pointer;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .cookies-input {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .cookies-input.show {
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .help-text a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .help-text a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -214,6 +282,23 @@
             <button onclick="getVideoInfo()" id="submitBtn">Get Info</button>
         </div>
 
+        <div class="cookies-section">
+            <div class="cookies-toggle">
+                <input type="checkbox" id="useCookies" onchange="toggleCookies()">
+                <label for="useCookies">🔓 Use YouTube Cookies (for restricted videos)</label>
+            </div>
+            <div class="cookies-input" id="cookiesInput">
+                <textarea
+                    id="cookiesData"
+                    placeholder="Paste your YouTube cookies here (Netscape format)...&#10;Example:&#10;# Netscape HTTP Cookie File&#10;.youtube.com    TRUE    /    TRUE    0    CONSENT    YES+&#10;.youtube.com    TRUE    /    FALSE   0    VISITOR_INFO1_LIVE    xxxxx"
+                ></textarea>
+                <div class="help-text">
+                    💡 Tip: Use browser extensions like "Get cookies.txt LOCALLY" to export YouTube cookies.
+                    <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank">Learn more</a>
+                </div>
+            </div>
+        </div>
+
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Fetching video information...</p>
@@ -229,8 +314,7 @@
         <div class="note">
             <strong>✅ YouTube Working!</strong> Most YouTube videos now work using advanced Android client emulation.
             <br><br>
-            <strong>⚠️ Note:</strong> Some age-restricted or region-locked videos may still require authentication.
-            If a video fails, it's likely due to YouTube restrictions, not the tool.
+            <strong>🔓 Cookies Support:</strong> For age-restricted or sign-in required videos, enable the cookies option above and paste your YouTube cookies exported from your browser.
             <br><br>
             <strong>✅ Supported Platforms:</strong> YouTube, TikTok, Twitter/X, Instagram, Vimeo, Dailymotion, and 1000+ others
             <br><br>
@@ -240,12 +324,24 @@
     </div>
 
     <script>
+        function toggleCookies() {
+            const checkbox = document.getElementById('useCookies');
+            const cookiesInput = document.getElementById('cookiesInput');
+            if (checkbox.checked) {
+                cookiesInput.classList.add('show');
+            } else {
+                cookiesInput.classList.remove('show');
+            }
+        }
+
         async function getVideoInfo() {
             const url = document.getElementById('videoUrl').value.trim();
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
             const result = document.getElementById('result');
             const submitBtn = document.getElementById('submitBtn');
+            const useCookies = document.getElementById('useCookies').checked;
+            const cookiesData = document.getElementById('cookiesData').value.trim();
 
             if (!url) {
                 error.textContent = 'Please enter a video URL';
@@ -260,7 +356,25 @@
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+                let response;
+
+                // Use POST if cookies are provided
+                if (useCookies && cookiesData) {
+                    response = await fetch('/api/info', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: url,
+                            cookies: cookiesData
+                        })
+                    });
+                } else {
+                    // Use GET for simple requests
+                    response = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+                }
+
                 const data = await response.json();
 
                 if (!response.ok) {
