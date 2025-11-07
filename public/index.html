@@ -208,8 +208,8 @@
             <input
                 type="text"
                 id="videoUrl"
-                placeholder="Enter video URL (e.g., YouTube, Vimeo, etc.)"
-                value="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                placeholder="Enter video URL (Vimeo, TikTok, Twitter, etc.)"
+                value="https://vimeo.com/148751763"
             >
             <button onclick="getVideoInfo()" id="submitBtn">Get Info</button>
         </div>
@@ -227,6 +227,9 @@
         </div>
 
         <div class="note">
+            <strong>⚠️ YouTube Limitation:</strong> YouTube currently blocks most serverless requests as bots.
+            This demo works best with other platforms like Vimeo, Dailymotion, TikTok, Twitter, etc.
+            <br><br>
             <strong>Note:</strong> This is a demo of yt-dlp running on Vercel serverless functions.
             It can extract metadata from videos on various platforms. Due to serverless limitations,
             actual downloading is not enabled in this demo.
@@ -264,7 +267,14 @@
                 displayVideoInfo(data);
                 result.classList.add('show');
             } catch (err) {
-                error.textContent = `Error: ${err.message}`;
+                let errorMessage = err.message;
+
+                // Special handling for YouTube bot detection
+                if (errorMessage.includes('Sign in to confirm') || errorMessage.includes('bot')) {
+                    errorMessage = '⚠️ YouTube Bot Detection: This video is currently blocked by YouTube for serverless requests. Please try a video from Vimeo, TikTok, Twitter, or other platforms that work better with this demo.';
+                }
+
+                error.innerHTML = errorMessage;
                 error.classList.add('show');
             } finally {
                 loading.classList.remove('show');
