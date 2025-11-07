@@ -90,51 +90,50 @@ class handler(BaseHTTPRequestHandler):
                     # If cookie file creation fails, continue without cookies
                     pass
 
-            try:
-                # Extract video information
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(video_url, download=False)
+            # Extract video information
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
 
-                    # Check if extraction failed
-                    if info is None:
-                        self.send_error_response(400, 'Failed to extract video information. The video may be restricted or unavailable.')
-                        return
+                # Check if extraction failed
+                if info is None:
+                    self.send_error_response(400, 'Failed to extract video information. The video may be restricted or unavailable.')
+                    return
 
-                    # Prepare response data with essential fields
-                    response_data = {
-                        'title': info.get('title'),
-                        'uploader': info.get('uploader'),
-                        'duration': info.get('duration'),
-                        'view_count': info.get('view_count'),
-                        'upload_date': info.get('upload_date'),
-                        'description': info.get('description'),
-                        'thumbnail': info.get('thumbnail'),
-                        'webpage_url': info.get('webpage_url'),
-                        'extractor': info.get('extractor'),
-                        'formats': [
-                            {
-                                'format_id': f.get('format_id'),
-                                'ext': f.get('ext'),
-                                'quality': f.get('quality'),
-                                'filesize': f.get('filesize'),
-                            }
-                            for f in (info.get('formats') or [])[:10]  # Limit to first 10 formats
-                        ] if info.get('formats') else []
-                    }
+                # Prepare response data with essential fields
+                response_data = {
+                    'title': info.get('title'),
+                    'uploader': info.get('uploader'),
+                    'duration': info.get('duration'),
+                    'view_count': info.get('view_count'),
+                    'upload_date': info.get('upload_date'),
+                    'description': info.get('description'),
+                    'thumbnail': info.get('thumbnail'),
+                    'webpage_url': info.get('webpage_url'),
+                    'extractor': info.get('extractor'),
+                    'formats': [
+                        {
+                            'format_id': f.get('format_id'),
+                            'ext': f.get('ext'),
+                            'quality': f.get('quality'),
+                            'filesize': f.get('filesize'),
+                        }
+                        for f in (info.get('formats') or [])[:10]  # Limit to first 10 formats
+                    ] if info.get('formats') else []
+                }
 
-                    self.send_success_response(response_data)
-            finally:
-                # Cleanup temporary cookie file
-                if cookie_file_path:
-                    try:
-                        os.unlink(cookie_file_path)
-                    except:
-                        pass
+                self.send_success_response(response_data)
 
         except yt_dlp.utils.DownloadError as e:
             self.send_error_response(400, f'Download error: {str(e)}')
         except Exception as e:
             self.send_error_response(500, f'Server error: {str(e)}')
+        finally:
+            # Cleanup temporary cookie file
+            if cookie_file_path:
+                try:
+                    os.unlink(cookie_file_path)
+                except:
+                    pass
 
     def send_success_response(self, data):
         self.send_response(200)
