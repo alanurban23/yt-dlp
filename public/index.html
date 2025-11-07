@@ -338,6 +338,12 @@
             <button onclick="getVideoInfo()" id="submitBtn">Get Info</button>
         </div>
 
+        <div class="input-group">
+            <button onclick="downloadVideo()" id="downloadBtn" style="flex: 1; background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);">
+                📥 Download Video (with restrictions bypass)
+            </button>
+        </div>
+
         <div class="cookies-section">
             <div class="cookies-toggle">
                 <input type="checkbox" id="useCookies" onchange="toggleCookies()">
@@ -414,15 +420,17 @@
         </div>
 
         <div class="note">
+            <strong>🤖 Bot Download Feature!</strong> Click "Download Video" to use Browserless bot that automatically bypasses age restrictions and YouTube protections!
+            <br><br>
             <strong>✅ YouTube Working!</strong> Most public YouTube videos work perfectly without any login.
             <br><br>
-            <strong>📱 Mobile-Friendly:</strong> This app works great on phones! Just paste a video URL and click "Get Info".
+            <strong>📱 Mobile-Friendly:</strong> This app works great on phones! Download button works on all devices.
             <br><br>
-            <strong>🔓 Advanced:</strong> For age-restricted videos, desktop users can import cookies (see checkbox above).
+            <strong>🔓 Advanced:</strong> The bot automatically handles cookies and consent dialogs. No manual setup needed!
             <br><br>
             <strong>✅ Supported Platforms:</strong> YouTube, TikTok, Twitter/X, Instagram, Vimeo, Dailymotion, and 1000+ others
             <br><br>
-            <strong>Info:</strong> This demo extracts video metadata only. Downloading is not enabled.
+            <strong>⚠️ Legal Notice:</strong> This tool is for educational purposes. Ensure you have rights to download content. Respect copyright and platform terms of service.
         </div>
     </div>
 
@@ -697,6 +705,101 @@
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
+            }
+        }
+
+        // Download video with restrictions bypass
+        async function downloadVideo() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const result = document.getElementById('result');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            if (!url) {
+                error.textContent = 'Please enter a video URL';
+                error.classList.add('show');
+                return;
+            }
+
+            // Reset UI
+            loading.classList.add('show');
+            error.classList.remove('show');
+            result.classList.remove('show');
+            downloadBtn.disabled = true;
+
+            // Update loading message
+            const loadingText = loading.querySelector('p');
+            loadingText.textContent = 'Starting browser bot to bypass restrictions and download video...';
+
+            try {
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Download failed');
+                }
+
+                // Show success message
+                const videoInfo = document.getElementById('videoInfo');
+                videoInfo.innerHTML = `
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; color: #155724;">
+                        <h3 style="margin: 0 0 15px 0; color: #155724;">✅ Download Successful!</h3>
+                        <div class="info-item">
+                            <div class="info-label">Status:</div>
+                            <div class="info-value">${data.message}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Filename:</div>
+                            <div class="info-value">${data.filename}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">File Size:</div>
+                            <div class="info-value">${data.size_mb} MB (${data.size.toLocaleString()} bytes)</div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 5px; color: #856404; font-size: 0.9em;">
+                            <strong>📝 Note:</strong> ${data.note}
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: #d1ecf1; border-radius: 5px; color: #0c5460; font-size: 0.9em;">
+                            <strong>🤖 Bot Features:</strong>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>Bypassed age restrictions using Browserless automation</li>
+                                <li>Automatically handled cookie consent</li>
+                                <li>Downloaded video server-side</li>
+                                <li>Worked around YouTube bot detection</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                result.classList.add('show');
+
+            } catch (err) {
+                error.innerHTML = `
+                    <strong>Download Error:</strong> ${err.message}
+                    <br><br>
+                    <small>The bot attempted to bypass restrictions but encountered an error. This could be due to:
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Video not available in the bot's region</li>
+                        <li>Browserless API rate limits</li>
+                        <li>YouTube's advanced bot detection</li>
+                        <li>Network timeout</li>
+                    </ul>
+                    Try again or use the "Get Info" button for metadata only.</small>
+                `;
+                error.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+                loadingText.textContent = 'Fetching video information...';
+                downloadBtn.disabled = false;
             }
         }
     </script>
