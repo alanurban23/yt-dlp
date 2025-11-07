@@ -53,14 +53,17 @@ class handler(BaseHTTPRequestHandler):
                     'Accept-Language': 'en-us,en;q=0.5',
                     'Sec-Fetch-Mode': 'navigate',
                 },
-                # Try to get available formats even if some fail
-                'ignoreerrors': True,
                 'no_check_certificate': True,
             }
 
             # Extract video information
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_url, download=False)
+
+                # Check if extraction failed
+                if info is None:
+                    self.send_error_response(400, 'Failed to extract video information. The video may be restricted or unavailable.')
+                    return
 
                 # Prepare response data with essential fields
                 response_data = {
