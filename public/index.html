@@ -365,10 +365,31 @@
 
                 <!-- Mobile Instructions -->
                 <div id="mobileInstructions" style="display: none;">
+                    <button onclick="startBrowserSession()" class="login-btn" id="mobileLoginBtn">
+                        🚀 Login to YouTube (Remote Browser)
+                    </button>
+
+                    <div class="instructions-box show" id="sessionStatus" style="background: #e3f2fd; border-left-color: #2196F3; display: none;">
+                        <strong>📱 Browser Session Active</strong>
+                        <p id="sessionMessage" style="margin: 10px 0;">Starting browser session...</p>
+                        <a id="browserLink" href="#" target="_blank" style="display: none; color: #2196F3; font-weight: bold; text-decoration: underline;">
+                            🌐 Click here to open YouTube login
+                        </a>
+                        <p style="margin: 10px 0; font-size: 0.85em; color: #666;">After logging in, cookies will be captured automatically.</p>
+                        <div id="cookieProgress" style="margin-top: 10px; display: none;">
+                            <div style="background: #ddd; border-radius: 5px; overflow: hidden; height: 20px;">
+                                <div id="progressBar" style="background: #2196F3; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                            </div>
+                            <p style="font-size: 0.85em; margin-top: 5px; color: #666;">Checking for cookies...</p>
+                        </div>
+                    </div>
+
                     <div class="instructions-box show" style="background: #fff3cd; border-left-color: #ffc107;">
-                        <strong>📱 Mobile Users:</strong>
-                        <p style="margin: 10px 0;">Cookie import is not supported on mobile devices. Please use a desktop computer to access age-restricted videos.</p>
-                        <p style="margin: 10px 0; font-size: 0.9em;">✅ Most public YouTube videos work without cookies!</p>
+                        <strong>ℹ️ How it works:</strong>
+                        <p style="margin: 10px 0;">1. Click the button above to start a remote browser session</p>
+                        <p style="margin: 10px 0;">2. Log into YouTube in the opened window</p>
+                        <p style="margin: 10px 0;">3. Cookies will be captured automatically</p>
+                        <p style="margin: 10px 0; font-size: 0.85em; color: #666;">Note: This uses a cloud browser service (may have usage limits)</p>
                     </div>
                 </div>
 
@@ -577,6 +598,107 @@
                 getVideoInfo();
             }
         });
+
+        // Browser session management
+        let currentSessionId = null;
+        let pollingInterval = null;
+
+        async function startBrowserSession() {
+            const loginBtn = document.getElementById('mobileLoginBtn');
+            const sessionStatus = document.getElementById('sessionStatus');
+            const sessionMessage = document.getElementById('sessionMessage');
+            const browserLink = document.getElementById('browserLink');
+            const cookieProgress = document.getElementById('cookieProgress');
+
+            loginBtn.disabled = true;
+            sessionStatus.style.display = 'block';
+            sessionMessage.textContent = 'Starting remote browser session...';
+            browserLink.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/start-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.fallback) {
+                    throw new Error(data.error || 'Failed to start browser session');
+                }
+
+                currentSessionId = data.sessionId;
+
+                // Show browser link
+                sessionMessage.textContent = 'Browser session started! Click the link below to login:';
+                browserLink.href = data.viewUrl;
+                browserLink.style.display = 'block';
+
+                // Start polling for cookies
+                cookieProgress.style.display = 'block';
+                startCookiePolling();
+
+            } catch (err) {
+                sessionMessage.innerHTML = `
+                    <span style="color: #c00;">❌ Error: ${err.message}</span><br>
+                    <span style="font-size: 0.85em;">Falling back to manual cookie entry.</span>
+                `;
+                loginBtn.disabled = false;
+            }
+        }
+
+        function startCookiePolling() {
+            let attempts = 0;
+            const maxAttempts = 60; // Poll for 2 minutes (every 2 seconds)
+
+            pollingInterval = setInterval(async () => {
+                attempts++;
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = `${(attempts / maxAttempts) * 100}%`;
+
+                if (attempts >= maxAttempts) {
+                    stopCookiePolling();
+                    document.getElementById('sessionMessage').innerHTML = `
+                        <span style="color: #f80;">⏱️ Session timeout. Click the button to try again.</span>
+                    `;
+                    document.getElementById('mobileLoginBtn').disabled = false;
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/get-cookies?sessionId=${currentSessionId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'success' && data.count > 0) {
+                        // Cookies retrieved successfully
+                        stopCookiePolling();
+                        document.getElementById('cookiesData').value = data.cookies;
+                        document.getElementById('sessionMessage').innerHTML = `
+                            <span style="color: #0a0;">✅ Success! ${data.count} cookies captured.</span><br>
+                            <span style="font-size: 0.85em;">Cookies have been added automatically. You can now use restricted videos!</span>
+                        `;
+                        document.getElementById('mobileLoginBtn').disabled = false;
+                        document.getElementById('cookieProgress').style.display = 'none';
+
+                        // Auto-enable cookies checkbox
+                        document.getElementById('useCookies').checked = true;
+                        toggleCookies();
+                    }
+                } catch (err) {
+                    console.log('Polling error:', err);
+                    // Continue polling
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        function stopCookiePolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
     </script>
 </body>
 </html>
