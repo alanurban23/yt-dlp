@@ -127,3 +127,4 @@ yt-dlp.zip
 # Plugins
 ytdlp_plugins/
 yt-dlp-plugins
+.vercel
