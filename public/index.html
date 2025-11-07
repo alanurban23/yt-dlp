@@ -265,6 +265,62 @@
         .help-text a:hover {
             text-decoration: underline;
         }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+            margin-bottom: 15px;
+            font-size: 15px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #CC0000 0%, #990000 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        .instructions-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .instructions-box.show {
+            display: block;
+        }
+
+        .instructions-box ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions-box li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #1976D2;
+        }
     </style>
 </head>
 <body>
@@ -288,12 +344,33 @@
                 <label for="useCookies">🔓 Use YouTube Cookies (for restricted videos)</label>
             </div>
             <div class="cookies-input" id="cookiesInput">
+                <button onclick="loginToYouTube()" class="login-btn" id="loginBtn">
+                    🔐 Login to YouTube & Auto-Import Cookies
+                </button>
+
+                <div class="instructions-box" id="instructionsBox">
+                    <strong>📋 Quick Cookie Export Instructions:</strong>
+                    <ol>
+                        <li>A new window with YouTube will open</li>
+                        <li>Log in to your YouTube account</li>
+                        <li>Press <kbd>F12</kbd> to open Developer Tools</li>
+                        <li>Go to <strong>Console</strong> tab</li>
+                        <li>Paste this command and press Enter:</li>
+                    </ol>
+                    <textarea id="cookieScript" readonly style="width: 100%; height: 80px; font-family: monospace; font-size: 11px; margin: 10px 0; padding: 8px;">copy(document.cookie.split('; ').map(c => { const [name, value] = c.split('='); return `.youtube.com\tTRUE\t/\tFALSE\t0\t${name}\t${value}`; }).join('\n'));</textarea>
+                    <button onclick="copyScript()" class="copy-btn">📋 Copy Script</button>
+                    <p style="margin-top: 10px; font-size: 0.9em;">After running the script, cookies will be copied to clipboard. Come back here and paste them in the textarea below.</p>
+                </div>
+
+                <div class="help-text" style="margin-top: 10px; margin-bottom: 10px;">
+                    Click above to get step-by-step instructions for importing cookies.
+                </div>
                 <textarea
                     id="cookiesData"
-                    placeholder="Paste your YouTube cookies here (Netscape format)...&#10;Example:&#10;# Netscape HTTP Cookie File&#10;.youtube.com    TRUE    /    TRUE    0    CONSENT    YES+&#10;.youtube.com    TRUE    /    FALSE   0    VISITOR_INFO1_LIVE    xxxxx"
+                    placeholder="Or paste your YouTube cookies here manually (Netscape format)...&#10;Example:&#10;# Netscape HTTP Cookie File&#10;.youtube.com    TRUE    /    TRUE    0    CONSENT    YES+&#10;.youtube.com    TRUE    /    FALSE   0    VISITOR_INFO1_LIVE    xxxxx"
                 ></textarea>
                 <div class="help-text">
-                    💡 Tip: Use browser extensions like "Get cookies.txt LOCALLY" to export YouTube cookies.
+                    💡 Alternative: Use browser extensions like "Get cookies.txt LOCALLY" to export YouTube cookies.
                     <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank">Learn more</a>
                 </div>
             </div>
@@ -324,6 +401,8 @@
     </div>
 
     <script>
+        let youtubeWindow = null;
+
         function toggleCookies() {
             const checkbox = document.getElementById('useCookies');
             const cookiesInput = document.getElementById('cookiesInput');
@@ -332,6 +411,53 @@
             } else {
                 cookiesInput.classList.remove('show');
             }
+        }
+
+        function loginToYouTube() {
+            const instructionsBox = document.getElementById('instructionsBox');
+
+            // Toggle instructions
+            if (instructionsBox.classList.contains('show')) {
+                instructionsBox.classList.remove('show');
+                return;
+            }
+
+            // Show instructions
+            instructionsBox.classList.add('show');
+
+            // Open YouTube in new window
+            const width = 800;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            youtubeWindow = window.open(
+                'https://www.youtube.com',
+                'YouTubeLogin',
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+            );
+
+            // Focus the new window
+            if (youtubeWindow) {
+                youtubeWindow.focus();
+            }
+        }
+
+        function copyScript() {
+            const script = document.getElementById('cookieScript');
+            script.select();
+            document.execCommand('copy');
+
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            btn.style.background = '#4CAF50';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
         }
 
         async function getVideoInfo() {
