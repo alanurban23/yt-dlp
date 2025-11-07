@@ -36,7 +36,6 @@ class handler(BaseHTTPRequestHandler):
                 'no_warnings': True,
                 'extract_flat': False,
                 'skip_download': True,
-                'format': 'best',
                 # Limit processing time
                 'socket_timeout': 10,
             }
