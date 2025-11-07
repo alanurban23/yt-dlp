@@ -30,7 +30,7 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(500, 'yt-dlp not available')
                 return
 
-            # Configure yt-dlp options
+            # Configure yt-dlp options with better bot detection handling
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
@@ -38,6 +38,22 @@ class handler(BaseHTTPRequestHandler):
                 'skip_download': True,
                 # Limit processing time
                 'socket_timeout': 10,
+                # Better user agent to avoid bot detection
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                # YouTube specific options
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'player_skip': ['webpage', 'configs'],
+                        'skip': ['hls', 'dash'],
+                    }
+                },
+                # Additional headers to mimic browser
+                'http_headers': {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-us,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                }
             }
 
             # Extract video information
