@@ -15,11 +15,12 @@ class handler(BaseHTTPRequestHandler):
             req_data = {
                 'launch': {
                     'headless': False,
-                    'args': ['--no-sandbox']
+                    'args': ['--no-sandbox', '--disable-setuid-sandbox'],
+                    'defaultViewport': {'width': 1280, 'height': 1024}
                 },
                 'navigate': {
-                    'url': 'https://accounts.google.com/ServiceLogin?service=youtube',
-                    'waitUntil': 'networkidle0'
+                    'url': 'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com/',
+                    'waitUntil': 'networkidle2'
                 }
             }
 

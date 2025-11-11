@@ -344,6 +344,19 @@
             </button>
         </div>
 
+        <div class="cookies-section" style="margin-top: 10px; padding: 15px; background: #e3f2fd; border-radius: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <input type="checkbox" id="autoLogin" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="autoLogin" style="cursor: pointer; font-weight: 600; color: #2196F3; margin: 0;">
+                    🔐 Login to YouTube automatically (recommended for restricted videos)
+                </label>
+            </div>
+            <p style="margin: 0; font-size: 0.85em; color: #666;">
+                ✅ When enabled: Opens real Chrome browser → You login to YouTube → Cookies captured automatically → Used for downloading<br>
+                ⚡ Takes 20-30 seconds but works for ALL restricted videos
+            </p>
+        </div>
+
         <div class="cookies-section">
             <div class="cookies-toggle">
                 <input type="checkbox" id="useCookies" onchange="toggleCookies()">
@@ -714,6 +727,40 @@
             }
         }
 
+        // Poll for cookies from login session
+        async function pollForCookies(sessionId, statusElement) {
+            const maxAttempts = 60; // 2 minutes
+
+            for (let i = 0; i < maxAttempts; i++) {
+                try {
+                    const response = await fetch(`/api/get-cookies?sessionId=${sessionId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'success' && data.count > 0) {
+                        return data.cookies;
+                    }
+
+                    // Update progress
+                    const progress = Math.round((i / maxAttempts) * 100);
+                    if (statusElement) {
+                        const currentHTML = statusElement.innerHTML;
+                        if (!currentHTML.includes('Progress:')) {
+                            statusElement.innerHTML = currentHTML + `<br><div style="margin-top: 10px; background: #ddd; border-radius: 5px; height: 20px; overflow: hidden;"><div style="background: #2196F3; height: 100%; width: ${progress}%;"></div></div><small>Progress: ${progress}%</small>`;
+                        } else {
+                            statusElement.innerHTML = currentHTML.replace(/width: \d+%/, `width: ${progress}%`).replace(/Progress: \d+%/, `Progress: ${progress}%`);
+                        }
+                    }
+
+                    // Wait 2 seconds before next attempt
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                } catch (err) {
+                    console.log('Polling error:', err);
+                }
+            }
+
+            return null; // Timeout
+        }
+
         // Download video with restrictions bypass
         async function downloadVideo() {
             const url = document.getElementById('videoUrl').value.trim();
@@ -721,6 +768,7 @@
             const error = document.getElementById('error');
             const result = document.getElementById('result');
             const downloadBtn = document.getElementById('downloadBtn');
+            const autoLogin = document.getElementById('autoLogin').checked;
 
             if (!url) {
                 error.textContent = 'Please enter a video URL';
@@ -736,16 +784,55 @@
 
             // Update loading message
             const loadingText = loading.querySelector('p');
-            loadingText.textContent = 'Testing 5 hacking methods to bypass restrictions...';
 
             try {
+                let cookies = '';
+
+                // Step 1: If auto-login is enabled, get cookies from YouTube login
+                if (autoLogin) {
+                    loadingText.textContent = '🔐 Step 1/3: Starting YouTube login session...';
+
+                    // Start browser session
+                    const sessionResponse = await fetch('/api/start-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const sessionData = await sessionResponse.json();
+
+                    if (!sessionResponse.ok) {
+                        throw new Error('Failed to start login session: ' + sessionData.error);
+                    }
+
+                    // Show login window
+                    loadingText.innerHTML = `
+                        🔐 Step 2/3: Please login to YouTube<br>
+                        <a href="${sessionData.viewUrl}" target="_blank" style="color: #2196F3; font-weight: bold; text-decoration: underline;">
+                            👉 Click here to open YouTube login window
+                        </a><br>
+                        <small>Waiting for you to login... (timeout: 2 minutes)</small>
+                    `;
+
+                    // Poll for cookies
+                    cookies = await pollForCookies(sessionData.sessionId, loadingText);
+
+                    if (!cookies) {
+                        throw new Error('Login timeout or failed. Please try again.');
+                    }
+
+                    loadingText.textContent = '✅ Step 3/3: Login successful! Testing 5 hacking methods...';
+                } else {
+                    loadingText.textContent = 'Testing 5 hacking methods to bypass restrictions...';
+                }
+
+                // Step 2: Test 5 methods (with or without cookies)
                 const response = await fetch('/api/download-advanced', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        url: url
+                        url: url,
+                        cookies: cookies
                     })
                 });
 

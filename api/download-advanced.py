@@ -18,9 +18,14 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(400, 'Missing video URL')
                 return
 
-            # Step 1: Get YouTube cookies via Browserless bot
-            print("Step 1: Getting cookies via Browserless...")
-            cookies_content = self.get_youtube_cookies_browserless()
+            # Step 1: Get cookies (from request OR via Browserless bot)
+            cookies_content = data.get('cookies', '')
+
+            if cookies_content:
+                print("Using cookies from request (user logged in)")
+            else:
+                print("No cookies provided, trying Browserless anonymous cookies...")
+                cookies_content = self.get_youtube_cookies_browserless()
 
             # Step 2: Try all 5 methods WITH cookies
             methods = [
