@@ -340,7 +340,7 @@
 
         <div class="input-group">
             <button onclick="downloadVideo()" id="downloadBtn" style="flex: 1; background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);">
-                📥 Download Video (with restrictions bypass)
+                📥 Test 5 Hacking Methods (Restricted Video)
             </button>
         </div>
 
@@ -420,13 +420,19 @@
         </div>
 
         <div class="note">
-            <strong>🤖 Bot Download Feature!</strong> Click "Download Video" to use Browserless bot that automatically bypasses age restrictions and YouTube protections!
+            <strong>🔥 5 Hacking Methods!</strong> Click the red button to test 5 advanced methods for bypassing restrictions:
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li><strong>Method 1:</strong> Android Client + SSL Bypass</li>
+                <li><strong>Method 2:</strong> iOS Custom Headers</li>
+                <li><strong>Method 3:</strong> Multi-Client Fallback</li>
+                <li><strong>Method 4:</strong> TV Embedded Client</li>
+                <li><strong>Method 5:</strong> Combined Ultimate (Nuclear Option)</li>
+            </ul>
+            <strong>💡 How it works:</strong> System automatically tries each method in sequence until one succeeds!
             <br><br>
-            <strong>✅ YouTube Working!</strong> Most public YouTube videos work perfectly without any login.
+            <strong>✅ Test URL:</strong> Try with <code>https://www.youtube.com/watch?v=MgqLAp4F3co</code> or any restricted video
             <br><br>
-            <strong>📱 Mobile-Friendly:</strong> This app works great on phones! Download button works on all devices.
-            <br><br>
-            <strong>🔓 Advanced:</strong> The bot automatically handles cookies and consent dialogs. No manual setup needed!
+            <strong>📱 Mobile-Friendly:</strong> All methods work on phones and desktop!
             <br><br>
             <strong>✅ Supported Platforms:</strong> YouTube, TikTok, Twitter/X, Instagram, Vimeo, Dailymotion, and 1000+ others
             <br><br>
@@ -730,10 +736,10 @@
 
             // Update loading message
             const loadingText = loading.querySelector('p');
-            loadingText.textContent = 'Starting browser bot to bypass restrictions and download video...';
+            loadingText.textContent = 'Testing 5 hacking methods to bypass restrictions...';
 
             try {
-                const response = await fetch('/api/download', {
+                const response = await fetch('/api/download-advanced', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -746,37 +752,55 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Download failed');
+                    throw new Error(data.error || 'All methods failed');
                 }
 
                 // Show success message
                 const videoInfo = document.getElementById('videoInfo');
                 videoInfo.innerHTML = `
                     <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; color: #155724;">
-                        <h3 style="margin: 0 0 15px 0; color: #155724;">✅ Download Successful!</h3>
+                        <h3 style="margin: 0 0 15px 0; color: #155724;">✅ SUCCESS! Video Accessible!</h3>
                         <div class="info-item">
-                            <div class="info-label">Status:</div>
-                            <div class="info-value">${data.message}</div>
+                            <div class="info-label">🎯 Method Used:</div>
+                            <div class="info-value"><strong>${data.method_used}: ${data.method_name}</strong></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">Filename:</div>
-                            <div class="info-value">${data.filename}</div>
+                            <div class="info-label">Title:</div>
+                            <div class="info-value">${data.title}</div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">File Size:</div>
-                            <div class="info-value">${data.size_mb} MB (${data.size.toLocaleString()} bytes)</div>
+                            <div class="info-label">Duration:</div>
+                            <div class="info-value">${Math.floor(data.duration / 60)}:${String(data.duration % 60).padStart(2, '0')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Formats Available:</div>
+                            <div class="info-value">${data.formats_count} formats</div>
+                        </div>
+                        ${data.view_count ? `
+                        <div class="info-item">
+                            <div class="info-label">Views:</div>
+                            <div class="info-value">${data.view_count.toLocaleString()}</div>
+                        </div>
+                        ` : ''}
+                        ${data.uploader ? `
+                        <div class="info-item">
+                            <div class="info-label">Uploader:</div>
+                            <div class="info-value">${data.uploader}</div>
+                        </div>
+                        ` : ''}
+                        <div style="margin-top: 15px; padding: 15px; background: #d1ecf1; border-radius: 5px; color: #0c5460; font-size: 0.9em;">
+                            <strong>🎯 Technique:</strong> ${data.description}
                         </div>
                         <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 5px; color: #856404; font-size: 0.9em;">
-                            <strong>📝 Note:</strong> ${data.note}
-                        </div>
-                        <div style="margin-top: 15px; padding: 15px; background: #d1ecf1; border-radius: 5px; color: #0c5460; font-size: 0.9em;">
-                            <strong>🤖 Bot Features:</strong>
+                            <strong>🔥 5 Hacking Methods Tested:</strong>
                             <ul style="margin: 10px 0; padding-left: 20px;">
-                                <li>Bypassed age restrictions using Browserless automation</li>
-                                <li>Automatically handled cookie consent</li>
-                                <li>Downloaded video server-side</li>
-                                <li>Worked around YouTube bot detection</li>
+                                <li>Method 1: Android Client with SSL Bypass</li>
+                                <li>Method 2: iOS Custom Headers</li>
+                                <li>Method 3: Multi-Client Fallback Chain</li>
+                                <li>Method 4: TV Embedded Client</li>
+                                <li>Method 5: Combined Ultimate (all techniques)</li>
                             </ul>
+                            <p style="margin-top: 10px;"><strong>The system automatically tried each method until one worked!</strong></p>
                         </div>
                     </div>
                 `;
@@ -784,16 +808,23 @@
 
             } catch (err) {
                 error.innerHTML = `
-                    <strong>Download Error:</strong> ${err.message}
+                    <strong>❌ All 5 Methods Failed:</strong> ${err.message}
                     <br><br>
-                    <small>The bot attempted to bypass restrictions but encountered an error. This could be due to:
+                    <small>The system tried all 5 hacking methods but couldn't access this video. Possible reasons:
                     <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>Video not available in the bot's region</li>
-                        <li>Browserless API rate limits</li>
-                        <li>YouTube's advanced bot detection</li>
-                        <li>Network timeout</li>
+                        <li><strong>Private or deleted video</strong> - Check if the video exists</li>
+                        <li><strong>Geographic restriction</strong> - Video not available in server's region</li>
+                        <li><strong>Login required</strong> - Some videos need authentication</li>
+                        <li><strong>Advanced bot detection</strong> - YouTube detected automated access</li>
+                        <li><strong>Live stream or premiere</strong> - Not yet available</li>
                     </ul>
-                    Try again or use the "Get Info" button for metadata only.</small>
+                    <strong>💡 Solutions:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Enable cookies checkbox and add your YouTube cookies</li>
+                        <li>Try a different video</li>
+                        <li>Use "Get Info" button for public videos (works for most content)</li>
+                    </ul>
+                    </small>
                 `;
                 error.classList.add('show');
             } finally {
