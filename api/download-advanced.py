@@ -18,11 +18,16 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(400, 'Missing video URL')
                 return
 
-            # Step 1: Get cookies (from request OR via Browserless bot)
+            # Step 1: Get cookies (from request OR via Browserless bot OR from browser)
             cookies_content = data.get('cookies', '')
+            use_browser_cookies = data.get('useBrowserCookies', False)
 
             if cookies_content:
                 print("Using cookies from request (user logged in)")
+            elif use_browser_cookies:
+                print("Will use browser cookies directly via yt-dlp")
+                # Don't fetch cookies, let yt-dlp handle it
+                cookies_content = 'USE_BROWSER'
             else:
                 print("No cookies provided, trying Browserless anonymous cookies...")
                 cookies_content = self.get_youtube_cookies_browserless()
@@ -143,6 +148,24 @@ class handler(BaseHTTPRequestHandler):
     def extract_with_cookies(self, video_url, ydl_opts, cookies_content):
         """Helper to extract info with cookies"""
         import tempfile
+
+        if cookies_content == 'USE_BROWSER':
+            # Use browser cookies directly
+            # Try common browsers in order
+            for browser in ['chrome', 'firefox', 'edge', 'safari', 'chromium']:
+                try:
+                    ydl_opts['cookiesfrombrowser'] = (browser,)
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(video_url, download=False)
+                        return info
+                except Exception as e:
+                    print(f"Browser {browser} failed: {e}")
+                    continue
+            # If all browsers fail, try without cookies
+            ydl_opts.pop('cookiesfrombrowser', None)
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+                return info
 
         # Save cookies to temp file
         cookies_file = None
